@@ -16,6 +16,111 @@ import 'reactflow/dist/style.css'
 
 const defaultViewport = { x: 0, y: 0, zoom: 1 }
 
+const TRANSLATIONS = {
+  'zh-TW': {
+    'Data Center Topology': '資料中心拓撲',
+    'Editable graph with autosave': '可編輯拓撲，含自動儲存',
+    Topology: '拓撲',
+    Nodes: '節點',
+    Workspace: '工作區',
+    'Add Components': '新增元件',
+    Layout: '佈局',
+    Export: '匯出',
+    New: '新增',
+    Save: '儲存',
+    Undo: '復原',
+    Redo: '重做',
+    'Auto Layout': '自動佈局',
+    'End-gap per layer': '每層末端保留間距',
+    'Load JSON': '匯入 JSON',
+    'Export JSON': '匯出 JSON',
+    'Loading...': '載入中...',
+    'Saving...': '儲存中...',
+    'Up to date': '已更新',
+    Error: '錯誤',
+    'Saved {time}': '已儲存 {time}',
+    'Topology name': '拓撲名稱',
+    Delete: '刪除',
+    Inspector: '檢視器',
+    'Select a node or edge.': '請選擇節點或連線。',
+    Type: '類型',
+    Kind: '種類',
+    Split: '分裂',
+    Tier: '階層',
+    Label: '標籤',
+    'Drag nodes, click to select, drag from handles to connect. Hold Shift to lasso select multiple items.':
+      '拖曳節點，點擊選取，從端點拖曳連線。按住 Shift 可框選多個物件。',
+    'Build the virtual data center, model cabling, and validate full paths.':
+      '建置虛擬資料中心、模擬布線並驗證完整路徑。',
+    'Auto Layout (High → Low)': '自動佈局（高 → 低）',
+    'Topology Generator': '拓撲產生器',
+    Custom: '自訂',
+    'Leaf-Spine': 'Leaf-Spine',
+    'Fat-Tree': 'Fat-Tree',
+    '3-Tier': '三層式',
+    'Expanded Clos': '擴展 Clos',
+    'Core-and-Pod': '核心/Pod',
+    '2D Torus': '2D Torus',
+    '3D Torus': '3D Torus',
+    Dragonfly: 'Dragonfly',
+    Butterfly: 'Butterfly',
+    Mesh: 'Mesh',
+    Ring: 'Ring',
+    Star: 'Star',
+    'Layer Gap': '層間距',
+    Spines: 'Spine 數量',
+    'Spine Kind': 'Spine 種類',
+    Leaves: 'Leaf 數量',
+    'Leaf Kind': 'Leaf 種類',
+    'k (even)': 'k（偶數）',
+    'Core Kind': 'Core 種類',
+    'Agg Kind': 'Agg 種類',
+    'Edge Kind': 'Edge 種類',
+    Core: 'Core',
+    Aggregation: 'Aggregation',
+    Access: 'Access',
+    'Aggregation Kind': 'Aggregation 種類',
+    'Access Kind': 'Access 種類',
+    Tiers: '層數',
+    'Nodes / Tier': '每層節點數',
+    Cores: 'Core 數量',
+    Pods: 'Pod 數量',
+    'Pod Leaves': 'Pod Leaf 數量',
+    'Pod Leaf Kind': 'Pod Leaf 種類',
+    'Pod Aggs': 'Pod Agg 數量',
+    'Pod Agg Kind': 'Pod Agg 種類',
+    Rows: '列數',
+    Cols: '欄數',
+    X: 'X',
+    Y: 'Y',
+    Z: 'Z',
+    Groups: '群組數',
+    'Routers / Group': '每群組路由數',
+    Stages: 'Stages',
+    Width: '寬度',
+    Count: '數量',
+    Rack: '機櫃',
+    Switch: '交換器',
+    Server: '伺服器',
+    ASIC: 'ASIC',
+    'Patch Panel': '配線盤',
+    '+ Rack': '+ 機櫃',
+    '+ Switch': '+ 交換器',
+    '+ Server': '+ 伺服器',
+    '+ ASIC': '+ ASIC',
+    '+ Patch': '+ 配線盤',
+    Language: '語言',
+    English: '英文',
+    '繁體中文': '繁體中文',
+    Untitled: '未命名',
+    Default: '預設',
+    'Delete this topology?': '要刪除此拓撲嗎？',
+    'Failed to load JSON. Check console for details.': '載入 JSON 失敗，請查看主控台。',
+    'Failed to export PNG. Check console for details.': '匯出 PNG 失敗，請查看主控台。',
+    Generate: '產生'
+  }
+}
+
 const KIND_CONFIG = {
   rack: { label: 'Rack', color: '#0ea5e9' },
   switch: { label: 'Switch', color: '#f59e0b' },
@@ -91,6 +196,17 @@ const ICONS = {
   patch: PatchIcon
 }
 
+let currentLocale = 'en'
+
+const setCurrentLocale = (nextLocale) => {
+  currentLocale = nextLocale
+}
+
+const getKindLabel = (kind) => {
+  const base = KIND_CONFIG[kind]?.label || kind
+  return TRANSLATIONS[currentLocale]?.[base] || base
+}
+
 const CustomNode = memo(({ data }) => {
   const config = KIND_CONFIG[data.kind] || KIND_CONFIG.rack
   const Icon = ICONS[data.kind] || RackIcon
@@ -111,7 +227,7 @@ const CustomNode = memo(({ data }) => {
       </div>
       <div className="node-body">
         <div className="node-title">{data.label}</div>
-        <div className="node-kind">{config.label}</div>
+        <div className="node-kind">{getKindLabel(data.kind)}</div>
       </div>
       {split && <div className="node-badge">1→{split}</div>}
     </div>
@@ -119,6 +235,7 @@ const CustomNode = memo(({ data }) => {
 })
 
 export default function App() {
+  const [locale, setLocale] = useState('en')
   const [topologies, setTopologies] = useState([])
   const [activeId, setActiveId] = useState(null)
   const [name, setName] = useState('Default')
@@ -136,6 +253,24 @@ export default function App() {
   const suppressHistoryRef = useRef(false)
   const reactFlowInstanceRef = useRef(null)
   const reactFlowWrapperRef = useRef(null)
+
+  const t = useCallback(
+    (text, vars) => {
+      const table = TRANSLATIONS[locale] || {}
+      let out = table[text] ?? text
+      if (vars) {
+        Object.entries(vars).forEach(([key, value]) => {
+          out = out.replaceAll(`{${key}}`, String(value))
+        })
+      }
+      return out
+    },
+    [locale]
+  )
+
+  useEffect(() => {
+    setCurrentLocale(locale)
+  }, [locale])
 
   const selectedType = selected?.type
   const selectedId = selected?.id
@@ -319,7 +454,7 @@ export default function App() {
       try {
         const res = await fetch(`/api/topologies/${id}`)
         const data = await res.json()
-        setName(data.name || 'Default')
+        setName(data.name || t('Default'))
         setTopoType(data.topo_type || 'custom')
         setTopoParams(data.topo_params || {})
         const nextNodes = data.nodes || []
@@ -339,7 +474,7 @@ export default function App() {
         setStatus('error')
       }
     },
-    [computeLayoutNodes, normalizeEdges, setEdges, setNodes]
+    [computeLayoutNodes, normalizeEdges, setEdges, setNodes, t]
   )
 
   const loadTopologies = useCallback(async () => {
@@ -446,7 +581,7 @@ export default function App() {
   }, [])
 
   const createTopology = async () => {
-    const nextName = window.prompt('Topology name', 'Untitled')
+    const nextName = window.prompt(t('Topology name'), t('Untitled'))
     if (!nextName) return
     setStatus('loading')
     try {
@@ -474,7 +609,7 @@ export default function App() {
 
   const deleteTopology = async () => {
     if (!activeId) return
-    const ok = window.confirm('Delete this topology?')
+    const ok = window.confirm(t('Delete this topology?'))
     if (!ok) return
     setStatus('loading')
     try {
@@ -488,7 +623,7 @@ export default function App() {
       if (nextId) {
         await loadTopology(nextId)
       } else {
-        setName('Untitled')
+        setName(t('Untitled'))
         setNodes([])
         setEdges([])
         setSelected(null)
@@ -532,7 +667,7 @@ export default function App() {
     } catch (err) {
       console.error(err)
       setStatus('error')
-      window.alert('Failed to load JSON. Check console for details.')
+      window.alert(t('Failed to load JSON. Check console for details.'))
     } finally {
       event.target.value = ''
     }
@@ -576,7 +711,7 @@ export default function App() {
       link.click()
     } catch (err) {
       console.error(err)
-      window.alert('Failed to export PNG. Check console for details.')
+      window.alert(t('Failed to export PNG. Check console for details.'))
     } finally {
       viewportEl.style.transform = prevTransform
       viewportEl.style.width = prevWidth
@@ -595,7 +730,7 @@ export default function App() {
       })
       if (!res.ok) throw new Error('Generate failed')
       const data = await res.json()
-      setName(data.name || 'Default')
+      setName(data.name || t('Default'))
       setTopoType(data.topo_type || 'custom')
       setTopoParams(data.topo_params || {})
       const nextNodes = data.nodes || []
@@ -675,11 +810,11 @@ export default function App() {
 
   const renderKindSelect = (value, onChange) => (
     <select value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="switch">Switch</option>
-      <option value="rack">Rack</option>
-      <option value="server">Server</option>
-      <option value="asic">ASIC</option>
-      <option value="patch">Patch Panel</option>
+      <option value="switch">{t('Switch')}</option>
+      <option value="rack">{t('Rack')}</option>
+      <option value="server">{t('Server')}</option>
+      <option value="asic">{t('ASIC')}</option>
+      <option value="patch">{t('Patch Panel')}</option>
     </select>
   )
 
@@ -809,8 +944,8 @@ export default function App() {
         <div className="brand">
           <div className="brand-dot" />
           <div>
-            <div className="brand-title">Data Center Topology</div>
-            <div className="brand-sub">Editable graph with autosave</div>
+            <div className="brand-title">{t('Data Center Topology')}</div>
+            <div className="brand-sub">{t('Editable graph with autosave')}</div>
           </div>
         </div>
         <div className="tabs">
@@ -820,16 +955,25 @@ export default function App() {
               className={`tab ${activeTab === tab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab)}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'topology' ? t('Topology') : t('Nodes')}
             </button>
           ))}
         </div>
         <div className="header-actions">
           <div className="action-group">
-            <div className="group-title">Workspace</div>
+            <div className="group-title">{t('Language')}</div>
+            <div className="group-body">
+              <select value={locale} onChange={(e) => setLocale(e.target.value)}>
+                <option value="en">{t('English')}</option>
+                <option value="zh-TW">{t('繁體中文')}</option>
+              </select>
+            </div>
+          </div>
+          <div className="action-group">
+            <div className="group-title">{t('Workspace')}</div>
             <div className="group-body">
               <div className="topology-select">
-                <span>Topology</span>
+                <span>{t('Topology')}</span>
                 <select
                   value={activeId || ''}
                   onChange={(e) => selectTopology(Number(e.target.value))}
@@ -842,47 +986,47 @@ export default function App() {
                 </select>
               </div>
               <button className="btn ghost" onClick={createTopology}>
-                New
+                {t('New')}
               </button>
               <button className="btn ghost" onClick={saveTopology}>
-                Save
+                {t('Save')}
               </button>
             </div>
           </div>
           <div className="action-group">
-            <div className="group-title">Add Components</div>
+            <div className="group-title">{t('Add Components')}</div>
             <div className="group-body">
             <div className="node-palette">
               <button className="btn" onClick={() => addNode('rack')}>
-                + Rack
+                {t('+ Rack')}
               </button>
               <button className="btn ghost" onClick={() => addNode('switch')}>
-                + Switch
+                {t('+ Switch')}
               </button>
               <button className="btn ghost" onClick={() => addNode('server')}>
-                + Server
+                {t('+ Server')}
               </button>
               <button className="btn ghost" onClick={() => addNode('asic')}>
-                + ASIC
+                {t('+ ASIC')}
               </button>
               <button className="btn ghost" onClick={() => addNode('patch')}>
-                + Patch
+                {t('+ Patch')}
               </button>
             </div>
           </div>
           </div>
           <div className="action-group">
-            <div className="group-title">Layout</div>
+            <div className="group-title">{t('Layout')}</div>
             <div className="group-body">
               <div className="toolbar">
                 <button className="btn ghost" onClick={undo}>
-                  Undo
+                  {t('Undo')}
                 </button>
                 <button className="btn ghost" onClick={redo}>
-                  Redo
+                  {t('Redo')}
                 </button>
                 <button className="btn ghost" onClick={autoLayout}>
-                  Auto Layout
+                  {t('Auto Layout')}
                 </button>
               </div>
               <label className="layout-toggle">
@@ -891,15 +1035,15 @@ export default function App() {
                   checked={layoutEndGap}
                   onChange={(event) => setLayoutEndGap(event.target.checked)}
                 />
-                <span>End-gap per layer</span>
+                <span>{t('End-gap per layer')}</span>
               </label>
             </div>
           </div>
           <div className="action-group">
-            <div className="group-title">Export</div>
+            <div className="group-title">{t('Export')}</div>
             <div className="group-body">
               <label className="btn ghost file-btn">
-                Load JSON
+                {t('Load JSON')}
                 <input type="file" accept="application/json" onChange={loadFromJson} />
               </label>
               <button
@@ -917,7 +1061,7 @@ export default function App() {
                   URL.revokeObjectURL(url)
                 }}
               >
-                Export JSON
+                {t('Export JSON')}
               </button>
             </div>
           </div>
@@ -925,58 +1069,60 @@ export default function App() {
         <div className={`status ${status}`}>
           <div className="status-dot" />
           <div className="status-text">
-            {status === 'loading' && 'Loading...'}
-            {status === 'saving' && 'Saving...'}
-            {status === 'ready' && 'Up to date'}
-            {status === 'error' && 'Error'}
+            {status === 'loading' && t('Loading...')}
+            {status === 'saving' && t('Saving...')}
+            {status === 'ready' && t('Up to date')}
+            {status === 'error' && t('Error')}
           </div>
           {lastSaved && status !== 'loading' && (
-            <div className="status-time">Saved {lastSaved.toLocaleTimeString()}</div>
+            <div className="status-time">
+              {t('Saved {time}', { time: lastSaved.toLocaleTimeString() })}
+            </div>
           )}
         </div>
       </header>
 
       <div className="content">
         <aside className="panel">
-          <div className="panel-title">Topology</div>
+          <div className="panel-title">{t('Topology')}</div>
           <div className="panel-actions">
             <input
               className="name-input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Topology name"
+              placeholder={t('Topology name')}
             />
             <button className="btn ghost" onClick={createTopology}>
-              New
+              {t('New')}
             </button>
             <button className="btn danger" onClick={deleteTopology}>
-              Delete
+              {t('Delete')}
             </button>
           </div>
           <div className="panel-divider" />
-          <div className="panel-title">Inspector</div>
-          {!hasSelection && <div className="panel-empty">Select a node or edge.</div>}
+          <div className="panel-title">{t('Inspector')}</div>
+          {!hasSelection && <div className="panel-empty">{t('Select a node or edge.')}</div>}
           {hasSelection && (
             <div className="panel-form">
               <label className="field">
-                <span>Type</span>
+                <span>{t('Type')}</span>
                 <input value={selectedType} disabled />
               </label>
               {selectedType === 'node' && (
                 <label className="field">
-                  <span>Kind</span>
+                  <span>{t('Kind')}</span>
                   <select value={selectionKind} onChange={(e) => updateKind(e.target.value)}>
-                    <option value="rack">Rack</option>
-                    <option value="switch">Switch</option>
-                    <option value="server">Server</option>
-                    <option value="asic">ASIC</option>
-                    <option value="patch">Patch Panel</option>
+                    <option value="rack">{t('Rack')}</option>
+                    <option value="switch">{t('Switch')}</option>
+                    <option value="server">{t('Server')}</option>
+                    <option value="asic">{t('ASIC')}</option>
+                    <option value="patch">{t('Patch Panel')}</option>
                   </select>
                 </label>
               )}
               {selectedType === 'node' && selectionKind === 'patch' && (
                 <label className="field">
-                  <span>Split</span>
+                  <span>{t('Split')}</span>
                   <input
                     type="number"
                     min="2"
@@ -988,7 +1134,7 @@ export default function App() {
               )}
               {selectedType === 'node' && (
                 <label className="field">
-                  <span>Tier</span>
+                  <span>{t('Tier')}</span>
                   <input
                     type="number"
                     min="1"
@@ -999,22 +1145,23 @@ export default function App() {
                 </label>
               )}
               <label className="field">
-                <span>Label</span>
+                <span>{t('Label')}</span>
                 <input
                   value={selectionLabel}
                   onChange={(e) => updateLabel(e.target.value)}
-                  placeholder="Label"
+                  placeholder={t('Label')}
                 />
               </label>
               <button className="btn danger" onClick={removeSelection}>
-                Delete
+                {t('Delete')}
               </button>
             </div>
           )}
           <div className="panel-divider" />
           <div className="panel-hint">
-            Drag nodes, click to select, drag from handles to connect. Hold Shift to lasso select
-            multiple items.
+            {t(
+              'Drag nodes, click to select, drag from handles to connect. Hold Shift to lasso select multiple items.'
+            )}
           </div>
         </aside>
 
@@ -1041,7 +1188,7 @@ export default function App() {
         <aside className="panel side">
           {activeTab === 'nodes' && (
             <>
-              <div className="panel-title">Nodes</div>
+              <div className="panel-title">{t('Nodes')}</div>
               <div className="panel-list">
                 {nodes.map((node) => (
                   <button
@@ -1050,7 +1197,9 @@ export default function App() {
                     onClick={() => setSelected({ type: 'node', id: node.id })}
                   >
                     <span>{node.data?.label || node.id}</span>
-                    <span className="muted">{node.data?.kind || node.type}</span>
+                    <span className="muted">
+                      {node.data?.kind ? getKindLabel(node.data.kind) : node.type}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -1058,38 +1207,38 @@ export default function App() {
           )}
           {activeTab === 'topology' && (
             <>
-              <div className="panel-title">Topology</div>
+              <div className="panel-title">{t('Topology')}</div>
               <div className="panel-empty">
-                Build the virtual data center, model cabling, and validate full paths.
+                {t('Build the virtual data center, model cabling, and validate full paths.')}
               </div>
               <div className="panel-form">
                 <button className="btn" onClick={autoLayout}>
-                  Auto Layout (High → Low)
+                  {t('Auto Layout (High → Low)')}
                 </button>
                 <div className="panel-divider" />
-                <div className="panel-title">Topology Generator</div>
+                <div className="panel-title">{t('Topology Generator')}</div>
                 <label className="field">
-                  <span>Type</span>
+                  <span>{t('Type')}</span>
                   <select value={topoType} onChange={(e) => setTopoType(e.target.value)}>
-                    <option value="custom">Custom</option>
-                    <option value="leaf-spine">Leaf-Spine</option>
-                    <option value="fat-tree">Fat-Tree</option>
-                    <option value="three-tier">3-Tier</option>
-                    <option value="expanded-clos">Expanded Clos</option>
-                    <option value="core-and-pod">Core-and-Pod</option>
-                    <option value="torus-2d">2D Torus</option>
-                    <option value="torus-3d">3D Torus</option>
-                    <option value="dragonfly">Dragonfly</option>
-                    <option value="butterfly">Butterfly</option>
-                    <option value="mesh">Mesh</option>
-                    <option value="ring">Ring</option>
-                    <option value="star">Star</option>
+                    <option value="custom">{t('Custom')}</option>
+                    <option value="leaf-spine">{t('Leaf-Spine')}</option>
+                    <option value="fat-tree">{t('Fat-Tree')}</option>
+                    <option value="three-tier">{t('3-Tier')}</option>
+                    <option value="expanded-clos">{t('Expanded Clos')}</option>
+                    <option value="core-and-pod">{t('Core-and-Pod')}</option>
+                    <option value="torus-2d">{t('2D Torus')}</option>
+                    <option value="torus-3d">{t('3D Torus')}</option>
+                    <option value="dragonfly">{t('Dragonfly')}</option>
+                    <option value="butterfly">{t('Butterfly')}</option>
+                    <option value="mesh">{t('Mesh')}</option>
+                    <option value="ring">{t('Ring')}</option>
+                    <option value="star">{t('Star')}</option>
                   </select>
                 </label>
                 {topoType === 'leaf-spine' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1098,7 +1247,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Spines</span>
+                      <span>{t('Spines')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1107,14 +1256,14 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Spine Kind</span>
+                      <span>{t('Spine Kind')}</span>
                       {renderKindSelect(
                         topoParams.spine_kind ?? 'switch',
                         (value) => updateParam('spine_kind', value)
                       )}
                     </label>
                     <label className="field">
-                      <span>Leaves</span>
+                      <span>{t('Leaves')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1123,7 +1272,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Leaf Kind</span>
+                      <span>{t('Leaf Kind')}</span>
                       {renderKindSelect(
                         topoParams.leaf_kind ?? 'switch',
                         (value) => updateParam('leaf_kind', value)
@@ -1134,7 +1283,7 @@ export default function App() {
                 {topoType === 'fat-tree' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1143,7 +1292,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>k (even)</span>
+                      <span>{t('k (even)')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1153,21 +1302,21 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Core Kind</span>
+                      <span>{t('Core Kind')}</span>
                       {renderKindSelect(
                         topoParams.core_kind ?? 'switch',
                         (value) => updateParam('core_kind', value)
                       )}
                     </label>
                     <label className="field">
-                      <span>Agg Kind</span>
+                      <span>{t('Agg Kind')}</span>
                       {renderKindSelect(
                         topoParams.agg_kind ?? 'switch',
                         (value) => updateParam('agg_kind', value)
                       )}
                     </label>
                     <label className="field">
-                      <span>Edge Kind</span>
+                      <span>{t('Edge Kind')}</span>
                       {renderKindSelect(
                         topoParams.edge_kind ?? 'switch',
                         (value) => updateParam('edge_kind', value)
@@ -1178,7 +1327,7 @@ export default function App() {
                 {topoType === 'three-tier' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1187,7 +1336,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Core</span>
+                      <span>{t('Core')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1196,14 +1345,14 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Core Kind</span>
+                      <span>{t('Core Kind')}</span>
                       {renderKindSelect(
                         topoParams.core_kind ?? 'switch',
                         (value) => updateParam('core_kind', value)
                       )}
                     </label>
                     <label className="field">
-                      <span>Aggregation</span>
+                      <span>{t('Aggregation')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1212,14 +1361,14 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Aggregation Kind</span>
+                      <span>{t('Aggregation Kind')}</span>
                       {renderKindSelect(
                         topoParams.agg_kind ?? 'switch',
                         (value) => updateParam('agg_kind', value)
                       )}
                     </label>
                     <label className="field">
-                      <span>Access</span>
+                      <span>{t('Access')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1228,7 +1377,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Access Kind</span>
+                      <span>{t('Access Kind')}</span>
                       {renderKindSelect(
                         topoParams.access_kind ?? 'switch',
                         (value) => updateParam('access_kind', value)
@@ -1239,7 +1388,7 @@ export default function App() {
                 {topoType === 'expanded-clos' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1248,7 +1397,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Tiers</span>
+                      <span>{t('Tiers')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1257,7 +1406,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Nodes / Tier</span>
+                      <span>{t('Nodes / Tier')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1266,7 +1415,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Kind</span>
+                      <span>{t('Kind')}</span>
                       {renderKindSelect(
                         topoParams.kind ?? 'switch',
                         (value) => updateParam('kind', value)
@@ -1277,7 +1426,7 @@ export default function App() {
                 {topoType === 'core-and-pod' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1286,7 +1435,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Cores</span>
+                      <span>{t('Cores')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1295,14 +1444,14 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Core Kind</span>
+                      <span>{t('Core Kind')}</span>
                       {renderKindSelect(
                         topoParams.core_kind ?? 'switch',
                         (value) => updateParam('core_kind', value)
                       )}
                     </label>
                     <label className="field">
-                      <span>Pods</span>
+                      <span>{t('Pods')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1311,7 +1460,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Pod Leaves</span>
+                      <span>{t('Pod Leaves')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1320,14 +1469,14 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Pod Leaf Kind</span>
+                      <span>{t('Pod Leaf Kind')}</span>
                       {renderKindSelect(
                         topoParams.leaf_kind ?? 'switch',
                         (value) => updateParam('leaf_kind', value)
                       )}
                     </label>
                     <label className="field">
-                      <span>Pod Aggs</span>
+                      <span>{t('Pod Aggs')}</span>
                       <input
                         type="number"
                         min="1"
@@ -1336,7 +1485,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Pod Agg Kind</span>
+                      <span>{t('Pod Agg Kind')}</span>
                       {renderKindSelect(
                         topoParams.agg_kind ?? 'switch',
                         (value) => updateParam('agg_kind', value)
@@ -1347,7 +1496,7 @@ export default function App() {
                 {topoType === 'torus-2d' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1356,7 +1505,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Rows</span>
+                      <span>{t('Rows')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1365,7 +1514,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Cols</span>
+                      <span>{t('Cols')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1374,7 +1523,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Kind</span>
+                      <span>{t('Kind')}</span>
                       {renderKindSelect(
                         topoParams.kind ?? 'switch',
                         (value) => updateParam('kind', value)
@@ -1385,7 +1534,7 @@ export default function App() {
                 {topoType === 'torus-3d' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1394,7 +1543,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>X</span>
+                      <span>{t('X')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1403,7 +1552,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Y</span>
+                      <span>{t('Y')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1412,7 +1561,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Z</span>
+                      <span>{t('Z')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1421,7 +1570,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Kind</span>
+                      <span>{t('Kind')}</span>
                       {renderKindSelect(
                         topoParams.kind ?? 'switch',
                         (value) => updateParam('kind', value)
@@ -1432,7 +1581,7 @@ export default function App() {
                 {topoType === 'dragonfly' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1441,7 +1590,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Groups</span>
+                      <span>{t('Groups')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1450,7 +1599,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Routers / Group</span>
+                      <span>{t('Routers / Group')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1459,7 +1608,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Kind</span>
+                      <span>{t('Kind')}</span>
                       {renderKindSelect(
                         topoParams.kind ?? 'switch',
                         (value) => updateParam('kind', value)
@@ -1470,7 +1619,7 @@ export default function App() {
                 {topoType === 'butterfly' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1479,7 +1628,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Stages</span>
+                      <span>{t('Stages')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1488,7 +1637,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Width</span>
+                      <span>{t('Width')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1497,7 +1646,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Kind</span>
+                      <span>{t('Kind')}</span>
                       {renderKindSelect(
                         topoParams.kind ?? 'switch',
                         (value) => updateParam('kind', value)
@@ -1508,7 +1657,7 @@ export default function App() {
                 {topoType === 'mesh' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1517,7 +1666,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Rows</span>
+                      <span>{t('Rows')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1526,7 +1675,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Cols</span>
+                      <span>{t('Cols')}</span>
                       <input
                         type="number"
                         min="2"
@@ -1535,7 +1684,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Kind</span>
+                      <span>{t('Kind')}</span>
                       {renderKindSelect(
                         topoParams.kind ?? 'switch',
                         (value) => updateParam('kind', value)
@@ -1546,7 +1695,7 @@ export default function App() {
                 {topoType === 'ring' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1555,7 +1704,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Count</span>
+                      <span>{t('Count')}</span>
                       <input
                         type="number"
                         min="3"
@@ -1564,7 +1713,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Kind</span>
+                      <span>{t('Kind')}</span>
                       {renderKindSelect(
                         topoParams.kind ?? 'switch',
                         (value) => updateParam('kind', value)
@@ -1575,7 +1724,7 @@ export default function App() {
                 {topoType === 'star' && (
                   <>
                     <label className="field">
-                      <span>Layer Gap</span>
+                      <span>{t('Layer Gap')}</span>
                       <input
                         type="number"
                         min="60"
@@ -1584,7 +1733,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Count</span>
+                      <span>{t('Count')}</span>
                       <input
                         type="number"
                         min="3"
@@ -1593,7 +1742,7 @@ export default function App() {
                       />
                     </label>
                     <label className="field">
-                      <span>Kind</span>
+                      <span>{t('Kind')}</span>
                       {renderKindSelect(
                         topoParams.kind ?? 'switch',
                         (value) => updateParam('kind', value)
@@ -1602,7 +1751,7 @@ export default function App() {
                   </>
                 )}
                 <button className="btn" onClick={generateTopology} disabled={topoType === 'custom'}>
-                  Generate
+                  {t('Generate')}
                 </button>
               </div>
             </>
