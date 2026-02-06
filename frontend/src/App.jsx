@@ -117,7 +117,8 @@ const TRANSLATIONS = {
     'Delete this topology?': '要刪除此拓撲嗎？',
     'Failed to load JSON. Check console for details.': '載入 JSON 失敗，請查看主控台。',
     'Failed to export PNG. Check console for details.': '匯出 PNG 失敗，請查看主控台。',
-    Generate: '產生'
+    Generate: '產生',
+    'Add to Topology': '加入拓撲'
   }
 }
 
@@ -248,11 +249,16 @@ export default function App() {
   const [lastSaved, setLastSaved] = useState(null)
   const [activeTab, setActiveTab] = useState('topology')
   const [layoutEndGap, setLayoutEndGap] = useState(false)
+  const [customKind, setCustomKind] = useState('switch')
+  const [customTier, setCustomTier] = useState(2)
+  const [customCount, setCustomCount] = useState(1)
   const statusTimerRef = useRef(null)
   const historyRef = useRef({ past: [], future: [] })
   const suppressHistoryRef = useRef(false)
   const reactFlowInstanceRef = useRef(null)
   const reactFlowWrapperRef = useRef(null)
+  const nodesRef = useRef([])
+  const edgesRef = useRef([])
 
   const t = useCallback(
     (text, vars) => {
@@ -271,6 +277,14 @@ export default function App() {
   useEffect(() => {
     setCurrentLocale(locale)
   }, [locale])
+
+  useEffect(() => {
+    nodesRef.current = nodes
+  }, [nodes])
+
+  useEffect(() => {
+    edgesRef.current = edges
+  }, [edges])
 
   const selectedType = selected?.type
   const selectedId = selected?.id
@@ -568,6 +582,54 @@ export default function App() {
       }
     }
     setNodes((nds) => nds.concat(next))
+  }
+
+  const addCustomBatch = () => {
+    const count = Math.max(1, Number(customCount) || 1)
+    const tier = Math.max(1, Number(customTier) || 1)
+    const kind = customKind || 'switch'
+    const baseNodes = nodesRef.current
+    const baseIndex = baseNodes.filter((node) => node.data?.kind === kind).length
+    const stamp = Date.now()
+    const nextNodes = []
+    for (let i = 0; i < count; i += 1) {
+      const id = `node-${stamp}-${i}`
+      nextNodes.push({
+        id,
+        type: 'custom',
+        position: { x: 120 + (baseNodes.length + i) * 30, y: 120 + (baseNodes.length + i) * 20 },
+        data: {
+          label: `${KIND_CONFIG[kind]?.label || kind} ${baseIndex + i + 1}`,
+          kind,
+          tier
+        }
+      })
+    }
+    setNodes((nds) => nds.concat(nextNodes))
+
+    const lowerTier = Math.max(
+      ...baseNodes
+        .map((node) => node.data?.tier)
+        .filter((t) => typeof t === 'number' && t < tier),
+      -Infinity
+    )
+    if (!Number.isFinite(lowerTier)) return
+    const lowerNodes = baseNodes.filter((node) => node.data?.tier === lowerTier)
+    if (!lowerNodes.length) return
+    const newEdges = []
+    for (const newNode of nextNodes) {
+      for (const target of lowerNodes) {
+        newEdges.push({
+          id: `e-custom-${newNode.id}-${target.id}`,
+          source: newNode.id,
+          target: target.id,
+          sourceHandle: 'bottom-out',
+          targetHandle: 'top-in',
+          label: 'link'
+        })
+      }
+    }
+    setEdges((eds) => eds.concat(newEdges))
   }
 
   const refreshTopologies = useCallback(async () => {
@@ -1029,6 +1091,15 @@ export default function App() {
                   {t('Auto Layout')}
                 </button>
               </div>
+              <label className="field">
+                <span>{t('Layer Gap')}</span>
+                <input
+                  type="number"
+                  min="60"
+                  value={topoParams.layerGap ?? 220}
+                  onChange={(e) => updateParam('layerGap', Number(e.target.value))}
+                />
+              </label>
               <label className="layout-toggle">
                 <input
                   type="checkbox"
@@ -1238,15 +1309,6 @@ export default function App() {
                 {topoType === 'leaf-spine' && (
                   <>
                     <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 220}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
-                    <label className="field">
                       <span>{t('Spines')}</span>
                       <input
                         type="number"
@@ -1280,17 +1342,37 @@ export default function App() {
                     </label>
                   </>
                 )}
-                {topoType === 'fat-tree' && (
+                {topoType === 'custom' && (
                   <>
                     <label className="field">
-                      <span>{t('Layer Gap')}</span>
+                      <span>{t('Kind')}</span>
+                      {renderKindSelect(customKind, (value) => setCustomKind(value))}
+                    </label>
+                    <label className="field">
+                      <span>{t('Tier')}</span>
                       <input
                         type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 220}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
+                        min="1"
+                        value={customTier}
+                        onChange={(e) => setCustomTier(Number(e.target.value))}
                       />
                     </label>
+                    <label className="field">
+                      <span>{t('Count')}</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={customCount}
+                        onChange={(e) => setCustomCount(Number(e.target.value))}
+                      />
+                    </label>
+                    <button className="btn" onClick={addCustomBatch}>
+                      {t('Add to Topology')}
+                    </button>
+                  </>
+                )}
+                {topoType === 'fat-tree' && (
+                  <>
                     <label className="field">
                       <span>{t('k (even)')}</span>
                       <input
@@ -1326,15 +1408,6 @@ export default function App() {
                 )}
                 {topoType === 'three-tier' && (
                   <>
-                    <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 220}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
                     <label className="field">
                       <span>{t('Core')}</span>
                       <input
@@ -1388,15 +1461,6 @@ export default function App() {
                 {topoType === 'expanded-clos' && (
                   <>
                     <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 220}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
-                    <label className="field">
                       <span>{t('Tiers')}</span>
                       <input
                         type="number"
@@ -1425,15 +1489,6 @@ export default function App() {
                 )}
                 {topoType === 'core-and-pod' && (
                   <>
-                    <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 220}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
                     <label className="field">
                       <span>{t('Cores')}</span>
                       <input
@@ -1496,15 +1551,6 @@ export default function App() {
                 {topoType === 'torus-2d' && (
                   <>
                     <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 140}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
-                    <label className="field">
                       <span>{t('Rows')}</span>
                       <input
                         type="number"
@@ -1533,15 +1579,6 @@ export default function App() {
                 )}
                 {topoType === 'torus-3d' && (
                   <>
-                    <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 120}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
                     <label className="field">
                       <span>{t('X')}</span>
                       <input
@@ -1581,15 +1618,6 @@ export default function App() {
                 {topoType === 'dragonfly' && (
                   <>
                     <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 260}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
-                    <label className="field">
                       <span>{t('Groups')}</span>
                       <input
                         type="number"
@@ -1618,15 +1646,6 @@ export default function App() {
                 )}
                 {topoType === 'butterfly' && (
                   <>
-                    <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 220}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
                     <label className="field">
                       <span>{t('Stages')}</span>
                       <input
@@ -1657,15 +1676,6 @@ export default function App() {
                 {topoType === 'mesh' && (
                   <>
                     <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 140}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
-                    <label className="field">
                       <span>{t('Rows')}</span>
                       <input
                         type="number"
@@ -1695,15 +1705,6 @@ export default function App() {
                 {topoType === 'ring' && (
                   <>
                     <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 220}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
-                    <label className="field">
                       <span>{t('Count')}</span>
                       <input
                         type="number"
@@ -1723,15 +1724,6 @@ export default function App() {
                 )}
                 {topoType === 'star' && (
                   <>
-                    <label className="field">
-                      <span>{t('Layer Gap')}</span>
-                      <input
-                        type="number"
-                        min="60"
-                        value={topoParams.layerGap ?? 220}
-                        onChange={(e) => updateParam('layerGap', Number(e.target.value))}
-                      />
-                    </label>
                     <label className="field">
                       <span>{t('Count')}</span>
                       <input
