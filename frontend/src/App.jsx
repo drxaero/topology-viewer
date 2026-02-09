@@ -16,6 +16,16 @@ import 'reactflow/dist/style.css'
 
 const defaultViewport = { x: 0, y: 0, zoom: 1 }
 
+const NON_TREE_TYPES = new Set([
+  'torus-2d',
+  'torus-3d',
+  'dragonfly',
+  'butterfly',
+  'mesh',
+  'ring',
+  'star'
+])
+
 const TRANSLATIONS = {
   'zh-TW': {
     'Data Center Topology': '資料中心拓撲',
@@ -208,21 +218,40 @@ const getKindLabel = (kind) => {
   return TRANSLATIONS[currentLocale]?.[base] || base
 }
 
-const CustomNode = memo(({ data }) => {
+const CustomNodeTree = memo(({ data }) => {
   const config = KIND_CONFIG[data.kind] || KIND_CONFIG.rack
   const Icon = ICONS[data.kind] || RackIcon
   const split = data.kind === 'patch' ? data.splitCount || 2 : null
 
   return (
     <div className="custom-node" style={{ borderColor: config.color }}>
-      <Handle id="left-in" type="target" position={Position.Left} />
-      <Handle id="left-out" type="source" position={Position.Left} />
-      <Handle id="right-in" type="target" position={Position.Right} />
-      <Handle id="right-out" type="source" position={Position.Right} />
-      <Handle id="top-in" type="target" position={Position.Top} />
-      <Handle id="top-out" type="source" position={Position.Top} />
-      <Handle id="bottom-in" type="target" position={Position.Bottom} />
-      <Handle id="bottom-out" type="source" position={Position.Bottom} />
+      <Handle id="left" type="target" position={Position.Left} />
+      <Handle id="right" type="source" position={Position.Right} />
+      <Handle id="top" type="target" position={Position.Top} />
+      <Handle id="bottom" type="source" position={Position.Bottom} />
+      <div className="node-icon" style={{ color: config.color }}>
+        <Icon />
+      </div>
+      <div className="node-body">
+        <div className="node-title">{data.label}</div>
+        <div className="node-kind">{getKindLabel(data.kind)}</div>
+      </div>
+      {split && <div className="node-badge">1→{split}</div>}
+    </div>
+  )
+})
+
+const CustomNodeGrid = memo(({ data }) => {
+  const config = KIND_CONFIG[data.kind] || KIND_CONFIG.rack
+  const Icon = ICONS[data.kind] || RackIcon
+  const split = data.kind === 'patch' ? data.splitCount || 2 : null
+
+  return (
+    <div className="custom-node" style={{ borderColor: config.color }}>
+      <Handle id="left" type="target" position={Position.Left} />
+      <Handle id="right" type="source" position={Position.Right} />
+      <Handle id="top" type="target" position={Position.Top} />
+      <Handle id="bottom" type="source" position={Position.Bottom} />
       <div className="node-icon" style={{ color: config.color }}>
         <Icon />
       </div>
@@ -290,7 +319,22 @@ export default function App() {
   const selectedId = selected?.id
 
   const hasSelection = Boolean(selectedType && selectedId)
-  const nodeTypes = useMemo(() => ({ custom: CustomNode }), [])
+  const nodeTypes = useMemo(
+    () => ({
+      custom: CustomNodeTree,
+      'custom-tree': CustomNodeTree,
+      'custom-grid': CustomNodeGrid
+    }),
+    []
+  )
+  const renderNodes = useMemo(
+    () =>
+      nodes.map((node) => ({
+        ...node,
+        type: node.data?.layout === 'grid' ? 'custom-grid' : 'custom-tree'
+      })),
+    [nodes]
+  )
 
   const handleSelectionChange = useCallback((items) => {
     let nextSelection = null
@@ -450,15 +494,20 @@ export default function App() {
     setNodes(computeLayoutNodes(nodes, edges, topoType, topoParams, { endGap: layoutEndGap }))
   }, [computeLayoutNodes, edges, layoutEndGap, nodes, setNodes, topoParams, topoType])
 
-  const normalizeEdges = useCallback((inputEdges, topoTypeValue) => {
-    if (topoTypeValue && topoTypeValue !== 'custom') {
-      return inputEdges.map((edge) => ({
+  const normalizeEdges = useCallback((inputEdges) => {
+    return inputEdges.map((edge) => {
+      let sourceHandle = edge.sourceHandle || 'bottom'
+      let targetHandle = edge.targetHandle || 'top'
+
+      if (sourceHandle === 'top') sourceHandle = 'bottom'
+      if (targetHandle === 'bottom') targetHandle = 'top'
+
+      return {
         ...edge,
-        sourceHandle: edge.sourceHandle || 'top-out',
-        targetHandle: edge.targetHandle || 'bottom-in'
-      }))
-    }
-    return inputEdges
+        sourceHandle,
+        targetHandle
+      }
+    })
   }, [])
 
   const loadTopology = useCallback(
@@ -472,11 +521,16 @@ export default function App() {
         setTopoType(data.topo_type || 'custom')
         setTopoParams(data.topo_params || {})
         const nextNodes = data.nodes || []
-        const nextEdges = normalizeEdges(data.edges || [], data.topo_type)
+        const nextEdges = normalizeEdges(data.edges || [])
+        const isNonTree = NON_TREE_TYPES.has(data.topo_type)
+        const withLayout = nextNodes.map((node) => ({
+          ...node,
+          data: { ...node.data, layout: node.data?.layout || (isNonTree ? 'grid' : 'tree') }
+        }))
         if (data.topo_type && data.topo_type !== 'custom') {
-          setNodes(computeLayoutNodes(nextNodes, nextEdges, data.topo_type, data.topo_params))
+          setNodes(computeLayoutNodes(withLayout, nextEdges, data.topo_type, data.topo_params))
         } else {
-          setNodes(nextNodes)
+          setNodes(withLayout)
         }
         setEdges(nextEdges)
         setSelected(null)
@@ -578,7 +632,8 @@ export default function App() {
       data: {
         label: `${config.label} ${nodes.length + 1}`,
         kind,
-        splitCount: kind === 'patch' ? 8 : undefined
+        splitCount: kind === 'patch' ? 8 : undefined,
+        layout: 'tree'
       }
     }
     setNodes((nds) => nds.concat(next))
@@ -601,7 +656,8 @@ export default function App() {
         data: {
           label: `${KIND_CONFIG[kind]?.label || kind} ${baseIndex + i + 1}`,
           kind,
-          tier
+          tier,
+          layout: 'tree'
         }
       })
     }
@@ -623,8 +679,8 @@ export default function App() {
           id: `e-custom-${newNode.id}-${target.id}`,
           source: newNode.id,
           target: target.id,
-          sourceHandle: 'bottom-out',
-          targetHandle: 'top-in',
+          sourceHandle: 'bottom',
+          targetHandle: 'top',
           label: 'link'
         })
       }
@@ -717,12 +773,13 @@ export default function App() {
       setTopoType(nextType)
       setTopoParams(nextParams)
       setName(data.name || name)
-      const nextEdges = normalizeEdges(data.edges, nextType)
-      setNodes(
-        nextType !== 'custom'
-          ? computeLayoutNodes(data.nodes, nextEdges, nextType, nextParams)
-          : data.nodes
-      )
+      const nextEdges = normalizeEdges(data.edges || [])
+      const isNonTree = NON_TREE_TYPES.has(nextType)
+      const withLayout = data.nodes.map((node) => ({
+        ...node,
+        data: { ...node.data, layout: node.data?.layout || (isNonTree ? 'grid' : 'tree') }
+      }))
+      setNodes(nextType !== 'custom' ? computeLayoutNodes(withLayout, nextEdges, nextType, nextParams) : withLayout)
       setEdges(nextEdges)
       setStatus('ready')
       setLastSaved(new Date())
@@ -796,8 +853,13 @@ export default function App() {
       setTopoType(data.topo_type || 'custom')
       setTopoParams(data.topo_params || {})
       const nextNodes = data.nodes || []
-      const nextEdges = normalizeEdges(data.edges || [], data.topo_type)
-      setNodes(computeLayoutNodes(nextNodes, nextEdges, data.topo_type, data.topo_params))
+      const isNonTree = NON_TREE_TYPES.has(data.topo_type)
+      const withLayout = nextNodes.map((node) => ({
+        ...node,
+        data: { ...node.data, layout: node.data?.layout || (isNonTree ? 'grid' : 'tree') }
+      }))
+      const nextEdges = normalizeEdges(data.edges || [])
+      setNodes(computeLayoutNodes(withLayout, nextEdges, data.topo_type, data.topo_params))
       setEdges(nextEdges)
       setStatus('ready')
       setLastSaved(new Date())
@@ -1238,7 +1300,7 @@ export default function App() {
 
         <main className="canvas" ref={reactFlowWrapperRef}>
           <ReactFlow
-            nodes={nodes}
+            nodes={renderNodes}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
