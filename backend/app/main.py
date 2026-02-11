@@ -161,12 +161,14 @@ def generate_topology(topology_id: int, payload: dict, db: Session = Depends(get
 
     topo_type = payload.get("topo_type")
     params = payload.get("params") or {}
+    edge_label = params.get("edge_label", "link")
     if topo_type == "leaf-spine":
         result = generate_leaf_spine(
             params.get("spines", 2),
             params.get("leaves", 4),
             params.get("spine_kind", "switch"),
             params.get("leaf_kind", "switch"),
+            edge_label,
         )
     elif topo_type == "fat-tree":
         result = generate_fat_tree(
@@ -174,6 +176,7 @@ def generate_topology(topology_id: int, payload: dict, db: Session = Depends(get
             params.get("core_kind", "switch"),
             params.get("agg_kind", "switch"),
             params.get("edge_kind", "switch"),
+            edge_label,
         )
     elif topo_type == "three-tier":
         result = generate_three_tier(
@@ -183,12 +186,14 @@ def generate_topology(topology_id: int, payload: dict, db: Session = Depends(get
             params.get("core_kind", "switch"),
             params.get("agg_kind", "switch"),
             params.get("access_kind", "switch"),
+            edge_label,
         )
     elif topo_type == "expanded-clos":
         result = generate_expanded_clos(
             params.get("tiers", 4),
             params.get("nodes_per_tier", 4),
             params.get("kind", "switch"),
+            edge_label,
         )
     elif topo_type == "core-and-pod":
         result = generate_core_and_pod(
@@ -199,12 +204,14 @@ def generate_topology(topology_id: int, payload: dict, db: Session = Depends(get
             params.get("core_kind", "switch"),
             params.get("agg_kind", "switch"),
             params.get("leaf_kind", "switch"),
+            edge_label,
         )
     elif topo_type == "torus-2d":
         result = generate_torus_2d(
             params.get("rows", 3),
             params.get("cols", 3),
             params.get("kind", "switch"),
+            edge_label,
         )
     elif topo_type == "torus-3d":
         result = generate_torus_3d(
@@ -212,29 +219,37 @@ def generate_topology(topology_id: int, payload: dict, db: Session = Depends(get
             params.get("y", 3),
             params.get("z", 3),
             params.get("kind", "switch"),
+            edge_label,
         )
     elif topo_type == "dragonfly":
         result = generate_dragonfly(
             params.get("groups", 3),
             params.get("routers_per_group", 4),
             params.get("kind", "switch"),
+            edge_label,
         )
     elif topo_type == "butterfly":
         result = generate_butterfly(
             params.get("stages", 4),
             params.get("width", 4),
             params.get("kind", "switch"),
+            edge_label,
         )
     elif topo_type == "mesh":
         result = generate_mesh(
             params.get("rows", 3),
             params.get("cols", 3),
             params.get("kind", "switch"),
+            edge_label,
         )
     elif topo_type == "ring":
-        result = generate_ring(params.get("count", 6), params.get("kind", "switch"))
+        result = generate_ring(
+            params.get("count", 6), params.get("kind", "switch"), edge_label
+        )
     elif topo_type == "star":
-        result = generate_star(params.get("count", 6), params.get("kind", "switch"))
+        result = generate_star(
+            params.get("count", 6), params.get("kind", "switch"), edge_label
+        )
     else:
         raise HTTPException(status_code=400, detail="Unsupported topology type")
 

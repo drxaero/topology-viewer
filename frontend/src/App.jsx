@@ -101,6 +101,7 @@ const TRANSLATIONS = {
     'Pod Agg Kind': 'Pod Agg 種類',
     Rows: '列數',
     Cols: '欄數',
+    'Edge Label': '連線標籤',
     X: 'X',
     Y: 'Y',
     Z: 'Z',
@@ -690,7 +691,7 @@ export default function App() {
           target: target.id,
           sourceHandle: 'bottom-out',
           targetHandle: 'top-in',
-          label: 'link'
+          label: topoParams.edge_label ?? 'link'
         })
       }
     }
@@ -1376,6 +1377,14 @@ export default function App() {
                     <option value="ring">{t('Ring')}</option>
                     <option value="star">{t('Star')}</option>
                   </select>
+                </label>
+                <label className="field">
+                  <span>{t('Edge Label')}</span>
+                  <input
+                    value={topoParams.edge_label ?? 'link'}
+                    onChange={(e) => updateParam('edge_label', e.target.value)}
+                    placeholder={t('Edge Label')}
+                  />
                 </label>
                 {topoType === 'leaf-spine' && (
                   <>
