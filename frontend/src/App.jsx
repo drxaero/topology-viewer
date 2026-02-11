@@ -225,10 +225,14 @@ const CustomNodeTree = memo(({ data }) => {
 
   return (
     <div className="custom-node" style={{ borderColor: config.color }}>
-      <Handle id="left" type="target" position={Position.Left} />
-      <Handle id="right" type="source" position={Position.Right} />
-      <Handle id="top" type="target" position={Position.Top} />
-      <Handle id="bottom" type="source" position={Position.Bottom} />
+      <Handle id="left-in" type="target" position={Position.Left} />
+      <Handle id="left-out" type="source" position={Position.Left} />
+      <Handle id="right-in" type="target" position={Position.Right} />
+      <Handle id="right-out" type="source" position={Position.Right} />
+      <Handle id="top-in" type="target" position={Position.Top} />
+      <Handle id="top-out" type="source" position={Position.Top} />
+      <Handle id="bottom-in" type="target" position={Position.Bottom} />
+      <Handle id="bottom-out" type="source" position={Position.Bottom} />
       <div className="node-icon" style={{ color: config.color }}>
         <Icon />
       </div>
@@ -248,10 +252,14 @@ const CustomNodeGrid = memo(({ data }) => {
 
   return (
     <div className="custom-node" style={{ borderColor: config.color }}>
-      <Handle id="left" type="target" position={Position.Left} />
-      <Handle id="right" type="source" position={Position.Right} />
-      <Handle id="top" type="target" position={Position.Top} />
-      <Handle id="bottom" type="source" position={Position.Bottom} />
+      <Handle id="left-in" type="target" position={Position.Left} />
+      <Handle id="left-out" type="source" position={Position.Left} />
+      <Handle id="right-in" type="target" position={Position.Right} />
+      <Handle id="right-out" type="source" position={Position.Right} />
+      <Handle id="top-in" type="target" position={Position.Top} />
+      <Handle id="top-out" type="source" position={Position.Top} />
+      <Handle id="bottom-in" type="target" position={Position.Bottom} />
+      <Handle id="bottom-out" type="source" position={Position.Bottom} />
       <div className="node-icon" style={{ color: config.color }}>
         <Icon />
       </div>
@@ -495,19 +503,20 @@ export default function App() {
   }, [computeLayoutNodes, edges, layoutEndGap, nodes, setNodes, topoParams, topoType])
 
   const normalizeEdges = useCallback((inputEdges) => {
-    return inputEdges.map((edge) => {
-      let sourceHandle = edge.sourceHandle || 'bottom'
-      let targetHandle = edge.targetHandle || 'top'
-
-      if (sourceHandle === 'top') sourceHandle = 'bottom'
-      if (targetHandle === 'bottom') targetHandle = 'top'
-
-      return {
-        ...edge,
-        sourceHandle,
-        targetHandle
+    const mapHandle = (value, role) => {
+      if (!value) return role === 'source' ? 'bottom-out' : 'top-in'
+      if (value.endsWith('-out') || value.endsWith('-in')) return value
+      if (['left', 'right', 'top', 'bottom'].includes(value)) {
+        return `${value}-${role === 'source' ? 'out' : 'in'}`
       }
-    })
+      return value
+    }
+
+    return inputEdges.map((edge) => ({
+      ...edge,
+      sourceHandle: mapHandle(edge.sourceHandle, 'source'),
+      targetHandle: mapHandle(edge.targetHandle, 'target')
+    }))
   }, [])
 
   const loadTopology = useCallback(
@@ -679,8 +688,8 @@ export default function App() {
           id: `e-custom-${newNode.id}-${target.id}`,
           source: newNode.id,
           target: target.id,
-          sourceHandle: 'bottom',
-          targetHandle: 'top',
+          sourceHandle: 'bottom-out',
+          targetHandle: 'top-in',
           label: 'link'
         })
       }
