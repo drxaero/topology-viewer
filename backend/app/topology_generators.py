@@ -171,12 +171,8 @@ def generate_fat_tree(
 
     # Connect edge <-> aggregation within each pod
     for pod in range(pods):
-        pod_edges = [
-            f"pod-{pod + 1}-edge-{idx + 1}" for idx in range(edge_per_pod)
-        ]
-        pod_aggs = [
-            f"pod-{pod + 1}-agg-{idx + 1}" for idx in range(agg_per_pod)
-        ]
+        pod_edges = [f"pod-{pod + 1}-edge-{idx + 1}" for idx in range(edge_per_pod)]
+        pod_aggs = [f"pod-{pod + 1}-agg-{idx + 1}" for idx in range(agg_per_pod)]
         for edge_id in pod_edges:
             for agg_id in pod_aggs:
                 edges.append(_edge(f"e-{agg_id}-{edge_id}", agg_id, edge_id, label=edge_label))
@@ -184,9 +180,7 @@ def generate_fat_tree(
     # Connect aggregation to core (classic k-ary fat-tree)
     group_size = k // 2
     for pod in range(pods):
-        pod_aggs = [
-            f"pod-{pod + 1}-agg-{idx + 1}" for idx in range(agg_per_pod)
-        ]
+        pod_aggs = [f"pod-{pod + 1}-agg-{idx + 1}" for idx in range(agg_per_pod)]
         for agg_idx, agg_id in enumerate(pod_aggs):
             for core_idx in range(group_size):
                 core_id = core_ids[agg_idx * group_size + core_idx]
@@ -218,7 +212,7 @@ def generate_expanded_clos(
         tier_nodes.append(ids)
 
     for i in range(len(tier_nodes) - 1):
-        _connect_all(edges, tier_nodes[i], tier_nodes[i + 1], f"e-t{i+1}", label=edge_label)
+        _connect_all(edges, tier_nodes[i], tier_nodes[i + 1], f"e-t{i + 1}", label=edge_label)
 
     return GeneratedTopology(
         topo_type="expanded-clos",
@@ -262,8 +256,8 @@ def generate_core_and_pod(
             node_id = f"pod-{pod + 1}-leaf-{idx + 1}"
             leaf_ids.append(node_id)
             nodes.append(_node(node_id, f"Pod {pod + 1} Leaf {idx + 1}", leaf_kind, tier=1))
-        _connect_all(edges, agg_ids, leaf_ids, f"e-pod-{pod+1}", label=edge_label)
-        _connect_all(edges, core_ids, agg_ids, f"e-core-{pod+1}", label=edge_label)
+        _connect_all(edges, agg_ids, leaf_ids, f"e-pod-{pod + 1}", label=edge_label)
+        _connect_all(edges, core_ids, agg_ids, f"e-core-{pod + 1}", label=edge_label)
 
     return GeneratedTopology(
         topo_type="core-and-pod",
@@ -273,9 +267,7 @@ def generate_core_and_pod(
     )
 
 
-def generate_torus_2d(
-    rows: int, cols: int, kind: str, edge_label: str | None = "link"
-) -> GeneratedTopology:
+def generate_torus_2d(rows: int, cols: int, kind: str, edge_label: str | None = "link") -> GeneratedTopology:
     rows = max(2, int(rows))
     cols = max(2, int(cols))
     nodes: list[dict] = []
@@ -316,9 +308,7 @@ def generate_torus_2d(
     )
 
 
-def generate_torus_3d(
-    x: int, y: int, z: int, kind: str, edge_label: str | None = "link"
-) -> GeneratedTopology:
+def generate_torus_3d(x: int, y: int, z: int, kind: str, edge_label: str | None = "link") -> GeneratedTopology:
     x = max(2, int(x))
     y = max(2, int(y))
     z = max(2, int(z))
@@ -445,9 +435,7 @@ def generate_dragonfly(
     )
 
 
-def generate_butterfly(
-    stages: int, width: int, kind: str, edge_label: str | None = "link"
-) -> GeneratedTopology:
+def generate_butterfly(stages: int, width: int, kind: str, edge_label: str | None = "link") -> GeneratedTopology:
     stages = max(2, int(stages))
     width = max(2, int(width))
     nodes: list[dict] = []
@@ -485,9 +473,7 @@ def generate_butterfly(
     )
 
 
-def generate_mesh(
-    rows: int, cols: int, kind: str, edge_label: str | None = "link"
-) -> GeneratedTopology:
+def generate_mesh(rows: int, cols: int, kind: str, edge_label: str | None = "link") -> GeneratedTopology:
     rows = max(2, int(rows))
     cols = max(2, int(cols))
     nodes: list[dict] = []
