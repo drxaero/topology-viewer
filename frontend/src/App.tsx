@@ -1330,6 +1330,8 @@ export default function App() {
           expanded={expandedSections.has("workspace")}
           onToggle={() => toggleSection("workspace")}
           locale={locale}
+          sidebarOpen={sidebarOpen}
+          onSidebarToggle={() => setSidebarOpen(true)}
         >
           <WorkspaceSection
             locale={locale}
@@ -1354,6 +1356,8 @@ export default function App() {
           expanded={expandedSections.has("generator")}
           onToggle={() => toggleSection("generator")}
           locale={locale}
+          sidebarOpen={sidebarOpen}
+          onSidebarToggle={() => setSidebarOpen(true)}
         >
           <GeneratorSection
             locale={locale}
@@ -1373,6 +1377,8 @@ export default function App() {
           expanded={expandedSections.has("addNodes")}
           onToggle={() => toggleSection("addNodes")}
           locale={locale}
+          sidebarOpen={sidebarOpen}
+          onSidebarToggle={() => setSidebarOpen(true)}
         >
           <AddNodesSection
             locale={locale}
@@ -1390,6 +1396,8 @@ export default function App() {
           expanded={expandedSections.has("nodesList")}
           onToggle={() => toggleSection("nodesList")}
           locale={locale}
+          sidebarOpen={sidebarOpen}
+          onSidebarToggle={() => setSidebarOpen(true)}
         >
           <NodesListSection
             locale={locale}
@@ -1407,6 +1415,8 @@ export default function App() {
           expanded={expandedSections.has("layout")}
           onToggle={() => toggleSection("layout")}
           locale={locale}
+          sidebarOpen={sidebarOpen}
+          onSidebarToggle={() => setSidebarOpen(true)}
         >
           <LayoutSection
             locale={locale}
@@ -1430,6 +1440,8 @@ export default function App() {
           expanded={expandedSections.has("settings")}
           onToggle={() => toggleSection("settings")}
           locale={locale}
+          sidebarOpen={sidebarOpen}
+          onSidebarToggle={() => setSidebarOpen(true)}
         >
           <SettingsSection locale={locale} theme={theme} onLocaleChange={setLocale} onThemeChange={setTheme} />
         </SidebarSection>
