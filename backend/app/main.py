@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -88,15 +89,11 @@ def write_topology(payload: TopologyPayload, db: Session = Depends(get_db)):
 @app.get("/api/topologies", response_model=list[TopologySummary])
 def read_topologies(db: Session = Depends(get_db)):
     items = list_topologies(db)
-    return [
-        {"id": item.id, "name": item.name, "updated_at": item.updated_at} for item in items
-    ]
+    return [{"id": item.id, "name": item.name, "updated_at": item.updated_at} for item in items]
 
 
 @app.post("/api/topologies", response_model=TopologyResponse)
-def create_topology_endpoint(
-    payload: TopologyCreate, db: Session = Depends(get_db)
-):
+def create_topology_endpoint(payload: TopologyCreate, db: Session = Depends(get_db)):
     topology = create_topology(db, payload)
     return {
         "id": topology.id,
@@ -126,9 +123,7 @@ def read_topology_by_id(topology_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/api/topologies/{topology_id}", response_model=TopologyResponse)
-def write_topology_by_id(
-    topology_id: int, payload: TopologyPayload, db: Session = Depends(get_db)
-):
+def write_topology_by_id(topology_id: int, payload: TopologyPayload, db: Session = Depends(get_db)):
     topology = get_topology(db, topology_id)
     if not topology:
         raise HTTPException(status_code=404, detail="Topology not found")
@@ -243,13 +238,9 @@ def generate_topology(topology_id: int, payload: dict, db: Session = Depends(get
             edge_label,
         )
     elif topo_type == "ring":
-        result = generate_ring(
-            params.get("count", 6), params.get("kind", "switch"), edge_label
-        )
+        result = generate_ring(params.get("count", 6), params.get("kind", "switch"), edge_label)
     elif topo_type == "star":
-        result = generate_star(
-            params.get("count", 6), params.get("kind", "switch"), edge_label
-        )
+        result = generate_star(params.get("count", 6), params.get("kind", "switch"), edge_label)
     else:
         raise HTTPException(status_code=400, detail="Unsupported topology type")
 

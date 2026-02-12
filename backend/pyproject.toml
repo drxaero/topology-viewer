@@ -1,0 +1,59 @@
+[project]
+name = "topology-viewer"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "janus_cheng@wiwynn.com"}
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy",
+    "pydantic"
+]
+
+[tool.poetry]
+# Enable package mode for building distributions
+packages = [{ include = "app" }]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry-auto-export]
+output = "requirements.txt"
+without_hashes = true
+without = ["dev"]
+
+[tool.ruff]  # https://docs.astral.sh/ruff/settings/#top-level
+line-length = 120
+exclude = ["**/migrations/", "**/manage.py"]
+target-version = "py312"
+
+[tool.ruff.lint]  # https://docs.astral.sh/ruff/settings/#lint
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E402",  # module level import not at top of file
+]
+
+[tool.ruff.format]  # https://docs.astral.sh/ruff/settings/#format
+quote-style = "double"  # Quote style: double quotes is default, explicitly stated here for clarity
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-parametrization",
+    "pre-commit",
+    "ruff",
+    "sphinx",
+    "pytest-cov",
+    "pytest-env",
+    "pytest-asyncio"
+]

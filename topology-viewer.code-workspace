@@ -1,0 +1,56 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.eol": "\n",
+		"editor.rulers": [
+			120
+		],
+		"python.analysis.extraPaths": [
+			"./src/"
+		],
+		"python.testing.pytestArgs": [
+			"-v",
+			"--cov=backend/app/",
+			"--cov-report=xml",
+			"backend/tests/"
+		],
+		"python.testing.unittestEnabled": false,
+		"python.testing.pytestEnabled": true,
+		"files.insertFinalNewline": true,
+        "editor.formatOnSave": true,
+        "[python]": {
+        	"editor.defaultFormatter": "charliermarsh.ruff",
+            "editor.codeActionsOnSave": {
+              "source.fixAll": "explicit",
+              "source.organizeImports": "explicit"
+            },
+        },
+		"[javascript]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"[javascriptreact]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"[css]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"testing.coverageToolbarEnabled": true,
+
+		"folder-path-color.folders": [
+			{ "path": "tests", "symbol": "🧪", "tooltip": "pytests", "color": "green" },
+		],
+		"cSpell.words": [
+			"endregion",
+			"pydantic",
+			"Pydantic"
+		],
+		"files.exclude": {
+			"**/__pycache__": true
+		},
+		"terminal.integrated.defaultProfile.windows": "Command Prompt",
+	}
+}

@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Work+Sans:wght@400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Work+Sans:wght@400;500&display=swap");
 
 :root {
   color-scheme: light;
-  font-family: 'Work Sans', system-ui, sans-serif;
+  font-family: "Work Sans", system-ui, sans-serif;
   --ink: #1f2933;
   --muted: #5b6b7a;
   --panel: rgba(255, 255, 255, 0.9);
@@ -19,7 +19,8 @@
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top left, #fef3c7, transparent 45%),
+  background:
+    radial-gradient(circle at top left, #fef3c7, transparent 45%),
     radial-gradient(circle at 80% 20%, #c7d2fe, transparent 50%),
     linear-gradient(120deg, #f1f5f9, #f8fafc 60%);
   color: var(--ink);
@@ -51,7 +52,7 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 }
 
 .brand-dot {
@@ -112,7 +113,9 @@ body {
   color: white;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   box-shadow: 0 6px 14px rgba(15, 118, 110, 0.2);
 }
 
@@ -212,7 +215,7 @@ body {
   overflow: hidden;
 }
 
-.file-btn input[type='file'] {
+.file-btn input[type="file"] {
   position: absolute;
   inset: 0;
   opacity: 0;
@@ -283,7 +286,7 @@ body {
 }
 
 .panel-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
   font-size: 16px;
   font-weight: 600;
 }
@@ -348,7 +351,7 @@ body {
 }
 
 .react-flow__node {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 }
 
 .custom-node {
@@ -428,7 +431,6 @@ body {
 .panel-item .muted {
   color: var(--muted);
 }
-
 
 .react-flow__edge-path {
   stroke: var(--accent-strong);
