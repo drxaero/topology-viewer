@@ -1341,6 +1341,31 @@ export default function App() {
         </SidebarSection>
 
         <SidebarSection
+          id="layout"
+          title="Layout"
+          titleZhTW="布局控制"
+          icon="📐"
+          expanded={expandedSections.has("layout")}
+          onToggle={() => toggleSection("layout")}
+          locale={locale}
+          sidebarOpen={sidebarOpen}
+          onSidebarToggle={() => setSidebarOpen(true)}
+        >
+          <LayoutSection
+            locale={locale}
+            layerGap={topoParams.layerGap ?? 180}
+            endGap={layoutEndGap}
+            onAutoLayout={autoLayout}
+            onUndo={undo}
+            onRedo={redo}
+            onLayerGapChange={(value) => updateParam("layerGap", value)}
+            onEndGapChange={setLayoutEndGap}
+            canUndo={historyRef.current.past.length > 0}
+            canRedo={historyRef.current.future.length > 0}
+          />
+        </SidebarSection>
+
+        <SidebarSection
           id="generator"
           title="Generator"
           titleZhTW="拓撲生成器"
@@ -1364,7 +1389,6 @@ export default function App() {
             onCustomTierChange={setCustomTier}
             onCustomCountChange={setCustomCount}
             onAddCustomBatch={addCustomBatch}
-            onGenerate={generateTopology}
           />
         </SidebarSection>
 
@@ -1403,31 +1427,6 @@ export default function App() {
             nodes={nodes}
             selectedNodeId={selected?.type === "node" ? selected.id : null}
             onSelectNode={(id) => setSelected({ type: "node", id })}
-          />
-        </SidebarSection>
-
-        <SidebarSection
-          id="layout"
-          title="Layout"
-          titleZhTW="布局控制"
-          icon="📐"
-          expanded={expandedSections.has("layout")}
-          onToggle={() => toggleSection("layout")}
-          locale={locale}
-          sidebarOpen={sidebarOpen}
-          onSidebarToggle={() => setSidebarOpen(true)}
-        >
-          <LayoutSection
-            locale={locale}
-            layerGap={topoParams.layerGap ?? 180}
-            endGap={layoutEndGap}
-            onAutoLayout={autoLayout}
-            onUndo={undo}
-            onRedo={redo}
-            onLayerGapChange={(value) => updateParam("layerGap", value)}
-            onEndGapChange={setLayoutEndGap}
-            canUndo={historyRef.current.past.length > 0}
-            canRedo={historyRef.current.future.length > 0}
           />
         </SidebarSection>
 

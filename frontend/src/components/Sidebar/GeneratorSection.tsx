@@ -13,7 +13,6 @@ interface GeneratorSectionProps {
   onCustomTierChange: (value: number) => void;
   onCustomCountChange: (value: number) => void;
   onAddCustomBatch: () => void;
-  onGenerate: () => void;
 }
 
 export default function GeneratorSection({
@@ -29,7 +28,6 @@ export default function GeneratorSection({
   onCustomTierChange,
   onCustomCountChange,
   onAddCustomBatch,
-  onGenerate,
 }: GeneratorSectionProps) {
   const t = (en: string, zhTW: string) => (locale === "zh-TW" ? zhTW : en);
 
@@ -286,15 +284,6 @@ export default function GeneratorSection({
           </div>
         </>
       )}
-
-      <button
-        className="btn"
-        onClick={onGenerate}
-        disabled={topoType === "custom"}
-        style={{ marginTop: "0.5rem" }}
-      >
-        {t("Generate", "生成")}
-      </button>
 
       {topoType === "custom" && (
         <>
